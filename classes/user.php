@@ -152,4 +152,57 @@ class user extends db
             "$this->password"
         )->fetchArray();
     }
+
+    /**
+     * Simple register
+     *
+     * @param string $username
+     * @param string $password
+     * @param string $confrim
+     * @param string $email
+     */
+    public function register($username = false, $password = false, $confrim = false, $email = false)
+    {
+
+        if (!empty($username) && !empty($password) && !empty($confrim) && !empty($email)) {
+
+            if ($password == $confrim) {
+
+
+                $this->username = db::real_escape_string($username);
+                $password = sha1(db::real_escape_string($password));
+                $this->email = db::real_escape_string($email);
+
+
+
+                try {
+                    db::query(
+                        'INSERT INTO users (`id`, `username`, `password`, `email`, `email_confirm`) VALUES (?,?,?,?,?)',
+                        NULL,
+                        "$this->username",
+                        "$password",
+                        "$this->email",
+                        1
+                    );
+                } catch (Exception $e) {
+                    // echo 'Caught exception: ',  $e->getMessage(), "\n";
+                }
+
+                $this->msg[] = 'User created';
+                $_SESSION['msg'] = $this->msg;
+            } else $this->error[] = 'The passwords do not match!';
+        } elseif (empty($username)) {
+
+            $this->error[] = 'The username field is empty';
+        } elseif (empty($password)) {
+
+            $this->error[] = 'The password field is empty!';
+        } elseif (empty($confrim)) {
+
+            $this->error[] = 'The password repeat field is empty!';
+        } elseif (empty($email)) {
+
+            $this->error[] = 'The e-mail field is empty!';
+        }
+    }
 }
