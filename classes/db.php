@@ -135,4 +135,10 @@ class db
 
         return  $this->connection->real_escape_string($string);
     }
+    private function _gettype($var) {
+	    if (is_string($var)) return 's';
+	    if (is_float($var)) return 'd';
+	    if (is_int($var)) return 'i';
+	    return 'b';
+	}
 }

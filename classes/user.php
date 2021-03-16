@@ -2,6 +2,7 @@
 
 namespace classes;
 
+use Exception;
 
 class user extends db
 {
@@ -173,27 +174,55 @@ class user extends db
                 $password = sha1(db::real_escape_string($password));
                 $this->email = db::real_escape_string($email);
 
+                if (
+                    $this->check_unique_nickname() == 0
+                    && $this->check_unique_email() == 0
+                    && $this->verify_email() == true
+                    && $this->verify_nick_alphanumeric() == true
+                    && $this->verify_username_lenght() == true
+                    && $this->verify_password_lenght() == true
+                ) {
 
+                    try {
+                        db::query(
+                            'INSERT INTO users (`id`, `username`, `password`, `email`, `email_confirm`) VALUES (?,?,?,?,?)',
+                            NULL,
+                            "$this->username",
+                            "$password",
+                            "$this->email",
+                            1
+                        );
+                    } catch (Exception $e) {
+                        // echo 'Caught exception: ',  $e->getMessage(), "\n";
+                    }
 
-                try {
-                    db::query(
-                        'INSERT INTO users (`id`, `username`, `password`, `email`, `email_confirm`) VALUES (?,?,?,?,?)',
-                        NULL,
-                        "$this->username",
-                        "$password",
-                        "$this->email",
-                        1
-                    );
-                } catch (Exception $e) {
-                    // echo 'Caught exception: ',  $e->getMessage(), "\n";
+                    $this->msg[] = 'User created!';
+                    $_SESSION['msg'] = $this->msg;
+                } else {
+                    unset($_SESSION['msg']);
+                    if ($this->check_unique_nickname() != 0) {
+                        $this->error[] = 'Username already taken!';
+                    }
+                    if ($this->verify_nick_alphanumeric() != true) {
+                        $this->error[] = 'Username must contain only characters, only alphanumeric characters!';
+                    }
+                    if ($this->verify_username_lenght() != true) {
+                        $this->error[] = 'Username must be between 3 and 32 characters!';
+                    }
+                    if ($this->check_unique_email() != 0) {
+                        $this->error[] = 'E-mail address is already taken!';
+                    }
+                    if ($this->verify_email() != true) {
+                        $this->error[] = 'E-mail address is incorrect!';
+                    }
+                    if ($this->verify_password_lenght() != true) {
+                        $this->error[] = 'The password must be at least 8 characters long!';
+                    }
                 }
-
-                $this->msg[] = 'User created';
-                $_SESSION['msg'] = $this->msg;
             } else $this->error[] = 'The passwords do not match!';
         } elseif (empty($username)) {
 
-            $this->error[] = 'The username field is empty';
+            $this->error[] = 'The username field is empty!';
         } elseif (empty($password)) {
 
             $this->error[] = 'The password field is empty!';
@@ -204,5 +233,86 @@ class user extends db
 
             $this->error[] = 'The e-mail field is empty!';
         }
+    }
+
+
+
+    /*Data validation during account registration
+    /
+    /
+    */
+    private function verify_password_lenght()
+    {
+        $password_lenght = strlen($this->username);
+        $valid_password_lenght = false;
+        if ($password_lenght < 8 || $password_lenght > 100) {
+            $valid_password_lenght = false;
+        } else {
+            $valid_password_lenght = true;
+        }
+        return $valid_password_lenght;
+    }
+    // Checking the username length
+    private function verify_username_lenght()
+    {
+        $username_lenght = strlen($this->username);
+        $valid_username_lenght = false;
+        if ($username_lenght < 3 || $username_lenght > 32) {
+            $valid_username_lenght = false;
+        } else {
+            $valid_username_lenght = true;
+        }
+        return $valid_username_lenght;
+    }
+    // Checking alphanumeric characters
+    private function verify_nick_alphanumeric()
+    {
+        $alphanumeric_nickname = false;
+        if (preg_match('![^a-zA-Z0-9]+!i', $this->username)) {
+            $alphanumeric_nickname = false;
+        } else {
+            $alphanumeric_nickname = true;
+        }
+        return $alphanumeric_nickname;
+    }
+    // Validation of the e-mail address
+    private function verify_email()
+    {
+        $valid_email = false;
+
+        if (filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+            $valid_email = true;
+        } else {
+            $valid_email = false;
+        }
+        return $valid_email;
+    }
+
+
+    // Checking the uniqueness of the usernames in the database
+    private function check_unique_nickname()
+    {
+        $accounts = db::query(
+            'SELECT * FROM `users` WHERE username = ?',
+            "$this->username"
+
+        )->fetchArray();
+
+        $account_count = count($accounts);
+
+        return $account_count;
+    }
+    // Checking the uniqueness of the email address in the database
+    private function check_unique_email()
+    {
+        $accounts = db::query(
+            'SELECT * FROM `users` WHERE email = ?',
+            "$this->email"
+
+        )->fetchArray();
+
+        $account_count = count($accounts);
+
+        return $account_count;
     }
 }
