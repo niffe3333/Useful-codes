@@ -43,7 +43,6 @@ Add post
             "$content",
             "$slug"
         );
-    
     }
 
     public function add_post($title, $content, $slug)
@@ -72,5 +71,18 @@ Delete post from database
     {
 
         $this->permament_delete_post($id);
+    }
+
+
+    /*
+Number of posts
+
+*/
+
+    public function Show_number_posts()
+    {
+
+        $posts = parent::query('SELECT * FROM posts')->row_count();
+        return $posts;
     }
 }

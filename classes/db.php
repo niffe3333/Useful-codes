@@ -118,7 +118,12 @@ class db
         return 'b';
     }
 
-
+    //number of rows returned
+    public function row_count()
+    {
+        $this->query->store_result();
+        return $this->query->num_rows;
+    }
     // close database
     public function close()
     {
@@ -152,7 +157,7 @@ class db
      *
      * @param int $count number of wordsq
      */
-   static public function loremIpsum($count = 1)
+    public function loremIpsum($count = 1)
     {
         $loremIpsumComplete = '';
 
