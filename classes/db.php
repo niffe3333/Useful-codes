@@ -12,7 +12,7 @@ class db
     protected $show_errors = TRUE;
     protected $query_closed = TRUE;
 
-// Creates a connection with the base
+    // Creates a connection with the base
     public function __construct($dbhost = 'localhost', $dbuser = 'root', $dbpass = '', $dbname = 'template', $charset = 'utf8')
     {
 
@@ -110,12 +110,13 @@ class db
         return $result;
     }
 
-    private function _gettype($var) {
-	    if (is_string($var)) return 's';
-	    if (is_float($var)) return 'd';
-	    if (is_int($var)) return 'i';
-	    return 'b';
-	}
+    private function _gettype($var)
+    {
+        if (is_string($var)) return 's';
+        if (is_float($var)) return 'd';
+        if (is_int($var)) return 'i';
+        return 'b';
+    }
 
 
     // close database
@@ -145,4 +146,25 @@ class db
         return  $this->connection->real_escape_string($string);
     }
 
+
+    /**
+     * Generate random text Lorem ipsum
+     *
+     * @param int $count number of wordsq
+     */
+   static public function loremIpsum($count = 1)
+    {
+        $loremIpsumComplete = '';
+
+        $loremIpsum = explode(' ', file_get_contents('loremIpsum.txt'));
+
+        if ($count >= 1) {
+
+            for ($i = 0; $i < $count; $i++) {
+                $random = rand(0, 999);
+                $loremIpsumComplete .= ' ' . $loremIpsum[$random];
+            }
+        }
+        return $loremIpsumComplete;
+    }
 }
