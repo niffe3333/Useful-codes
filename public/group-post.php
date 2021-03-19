@@ -1,3 +1,24 @@
+<?php
+ob_start();
+function autoloader($class) {
+    include '../' . $class . '.php';
+  }
+  spl_autoload_register('autoloader');
+$user = new classes\user();
+if(!$user->is_logged()){
+    header('Location: login.php');
+}
+$join_file = true;
+$this_group = new classes\group();
+
+if(isset($_GET['group'])){
+$this_group_info = $this_group -> show_group_info($_GET['group']);
+$number_of_members = $this_group -> Show_number_of_members();
+}else{
+    header('Location: index.php');
+}
+ob_end_flush();
+?>
 <!doctype html>
 <html lang="en">
 
@@ -15,7 +36,7 @@
     <link href="css/navbarLeft.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <title>Hello, world!</title>
+    <title>Add new group</title>
 </head>
 
 <body>
@@ -38,15 +59,16 @@
     <div class="container">
         <div class="row d-flex justify-content-center mt-5">
             <div class="col-md-6 text-center">
-                <h1>Programming PHP <a href="#" class="btn btn-outline-secondary"><i class="fas fa-cog"></i></a></h1>
-                <p>Number of members : 1020</p>
+                <h1><?php echo $this_group_info['title'];?> <a href="#" class="btn btn-outline-secondary"><i class="fas fa-cog"></i></a></h1>
+                <p>Number of members : <?php echo $number_of_members;?></p>
             </div>
         </div>
  
     <div class="container">
         <div class="row d-flex justify-content-center mt-5">
             <div class="col-md-6 text-center">
-                <p> A group for beginners and advanced programmers</p>
+                <?php echo '<p>'.$this_group_info['description'].'</p>';?>
+                
             </div>
         </div>
     </div>

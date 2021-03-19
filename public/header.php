@@ -1,3 +1,10 @@
+<?php
+
+if (!isset($join_file) && !$join_file) {
+    header('Location: login.php');
+    exit();
+}
+?>
 <style>
     body {
         margin-top: 100px;
@@ -66,11 +73,14 @@
     h1{
         color:#6c757d;
     }
+    a{
+        text-decoration: none;
+    }
 </style>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">LifeLite</a>
+        <a class="navbar-brand" href="index.php">LifeLite</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -118,7 +128,7 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
+                        <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
                     </ul>
                 </li>
 

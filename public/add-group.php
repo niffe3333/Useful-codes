@@ -1,3 +1,31 @@
+<?php
+
+function autoloader($class) {
+    include '../' . $class . '.php';
+  }
+  spl_autoload_register('autoloader');
+$user = new classes\user();
+
+if(!$user->is_logged()){
+    header('Location: login.php');
+}
+$join_file = true;
+
+
+if (isset($_POST['title']) && isset($_POST['description']) && isset($_POST['tags'])) {
+  
+    $new_group = new classes\group();
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $tags = $_POST['tags'];
+    $new_group -> add_group($title, $description, $tags);
+
+    
+}
+
+
+
+?>
 <!doctype html>
 <html lang="en">
 
@@ -15,7 +43,7 @@
     <link href="css/navbarLeft.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <title>Hello, world!</title>
+    <title>Add new group</title>
 </head>
 
 <body>
@@ -42,21 +70,21 @@
         <div class="row d-flex justify-content-center mt-5">
 
             <div class="col-md-8">
-                <form>
+            <form action="<?php echo $_SERVER['REQUEST_URI']; ?> " method="POST">
                     <p>Places to add: Your group</p>
                     <div class="mb-3">
                         <label for="group_title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="group_title" required>
+                        <input type="text" name="title" class="form-control" id="group_title" minlength="1" maxlength="100" required>
                         <div id="group_titleHelp" class="form-text">(This field is required)</div>
                     </div>
                     <div class="mb-3">
                         <label for="group_description" class="form-label">Description</label>
-                        <textarea class="form-control" id="group_content" rows="3"></textarea>
+                        <textarea name="description" class="form-control" id="group_content" rows="3"></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label for="group_tags" class="form-label">Tags</label>
-                        <input type="text" class="form-control" id="group_tags">
+                        <input type="text" name="tags" class="form-control" id="group_tags">
                         <div id="group_tagsHelp" class="form-text">(You can add tags to make it easier to find a group)</div>
                     </div>
                     <button type="submit" class="btn btn-success">Add group</button>
