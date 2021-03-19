@@ -1,0 +1,13 @@
+
+
+.navbar {
+    z-index: 289;
+
+  }
+  
+        .dropdown-toggle::after { 
+            content: none; 
+        } 
+#search{
+    max-width:50rem;
+}
