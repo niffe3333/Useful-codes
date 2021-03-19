@@ -143,9 +143,41 @@ Number of posts
      
     }
 
-    
 
 
+    private function update_group()
+    {
+       
+        if (strlen($this->title) > 0 && strlen($this->title) < 100 && $this->owner_id != Null) {
+
+            // UPDATE `u_group` SET `title` = 'Programming PHPs', `description` = 'Programming PHPs', `tags` = 'Programming PHPs' WHERE `u_group`.`id` = 1;
+            db::query(
+                'UPDATE u_group SET `title` = ? , `description` = ? ,`tags` = ? WHERE id = ? AND owner_id = ?',
+              
+                "$this->title",
+                "$this->description",
+                "$this->tags",
+                "$this->group_id",
+                "$this->owner_id"
+            );
+             header('Location: group-post.php?group='.$this->group_id);
+        }
+    }
+
+    public function change_group($title = false, $description = "", $tags = "", $group_id = false)
+    {
+
+        $this->group_id = parent::real_escape_string($group_id);
+        $this->title = parent::real_escape_string($title);
+        $this->description = parent::real_escape_string($description);
+        $this->tags = parent::real_escape_string($tags);
+        $this->owner_id = parent::real_escape_string($_SESSION['user_id']);
+       
+         $this->update_group();
+     
+    }
+
+  
 
 
 
