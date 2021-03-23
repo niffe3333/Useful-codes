@@ -10,24 +10,34 @@ if (!$user->is_logged()) {
     header('Location: login.php');
 }
 $join_file = true;
-$this_group = new classes\group();
 
 if (isset($_GET['group'])) {
-    $this_group_info = $this_group->show_group_info($_GET['group']);
+    $group_id = $_GET['group'];
+
+    $this_group = new classes\group();
+    $this_group->group_id($group_id);
+ 
+    if (isset($_POST['join'])) {
+
+        $this_group->join_the_group();
+    }
+    $this_group_info = $this_group->show_group_info();
+    $user_is_owner = $this_group->group_owner();
     $number_of_members = $this_group->Show_number_of_members();
+    $whether_group_member = $this_group->whether_group_member();
 } else {
     header('Location: index.php');
 }
 
 
 if (isset($_POST['title']) && isset($_POST['description']) && isset($_POST['tags'])) {
-    $group_id = $_GET['group'];
+
     $change_group = new classes\group();
+    $change_group->group_id($group_id);
     $title = $_POST['title'];
     $description = $_POST['description'];
     $tags = $_POST['tags'];
-     $change_group -> change_group($title, $description, $tags, $group_id);
-
+    $change_group->change_group($title, $description, $tags, $group_id);
 }
 
 ob_end_flush();
@@ -49,75 +59,77 @@ ob_end_flush();
     <link href="css/navbarLeft.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <title>Add new group</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Group</title>
 </head>
 
 <body>
 
 
+    <?php if ($user_is_owner == true) : ?>
+        <div class="modal fade" id="group_settings" tabindex="-1" aria-labelledby="group_settings" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel"><?php echo $this_group_info['title']; ?></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row d-flex justify-content-center">
 
-    <div class="modal fade" id="group_settings" tabindex="-1" aria-labelledby="group_settings" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel"><?php echo $this_group_info['title']; ?></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row d-flex justify-content-center">
+                            <div class="col-md-12">
+                                <form action="<?php echo $_SERVER['REQUEST_URI']; ?> " method="POST">
 
-                        <div class="col-md-12">
-                            <form action="<?php echo $_SERVER['REQUEST_URI']; ?> " method="POST">
-                            
-                                <div class="mb-3">
-                                    <label for="group_title" class="form-label">Title</label>
-                                    <input type="text" value="<?php echo $this_group_info['title'];?>" name="title" class="form-control" id="group_title" minlength="1" maxlength="100" required>
-                                    <div id="group_titleHelp" class="form-text">(This field is required)</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="group_description" class="form-label">Description</label>
-                                    <textarea name="description" class="form-control" id="group_content" rows="3"><?php echo $this_group_info['description'];?></textarea>
-                                </div>
+                                    <div class="mb-3">
+                                        <label for="group_title" class="form-label">Title</label>
+                                        <input type="text" value="<?php echo $this_group_info['title']; ?>" name="title" class="form-control" id="group_title" minlength="1" maxlength="100" required>
+                                        <div id="group_titleHelp" class="form-text">(This field is required)</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="group_description" class="form-label">Description</label>
+                                        <textarea name="description" class="form-control" id="group_content" rows="3"><?php echo $this_group_info['description']; ?></textarea>
+                                    </div>
 
-                                <div class="mb-3">
-                                    <label for="group_tags" class="form-label">Tags</label>
-                                    <input type="text" name="tags" class="form-control" id="group_tags" value="<?php echo $this_group_info['tags'];?>">
-                                    <div id="group_tagsHelp" class="form-text">(You can add tags to make it easier to find a group)</div>
-                                </div>
-                                <button type="submit" class="btn btn-success">Change</button>
-                            </form>
+                                    <div class="mb-3">
+                                        <label for="group_tags" class="form-label">Tags</label>
+                                        <input type="text" name="tags" class="form-control" id="group_tags" value="<?php echo $this_group_info['tags']; ?>">
+                                        <div id="group_tagsHelp" class="form-text">(You can add tags to make it easier to find a group)</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">Change</button>
+                                </form>
 
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Accept</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Accept</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
 
 
-
-    <!-- <div class="modal fade" id="group_settings" tabindex="-1" aria-labelledby="group_settings" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel"><?php echo $this_group_info['title']; ?></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-       Do you want to leave this group?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Accept</button>
-      </div>
-    </div>
-  </div>
-</div> -->
+    <?php elseif ($user_is_owner == false && $whether_group_member == true) : ?>
+        <div class="modal fade" id="group_settings" tabindex="-1" aria-labelledby="group_settings" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel"><?php echo $this_group_info['title']; ?></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Do you want to leave this group?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Accept</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
     <!-- NAVBAR -->
     <?php require_once 'header.php'; ?>
     <!-- END NAVBAR -->
@@ -136,7 +148,7 @@ ob_end_flush();
     <div class="container">
         <div class="row d-flex justify-content-center mt-5">
             <div class="col-md-6 text-center">
-                <h1><?php echo $this_group_info['title']; ?> <a href="#" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#group_settings"><i class="fas fa-cog"></i></a></h1>
+                <h1><?php echo $this_group_info['title']; ?> <?php if ($whether_group_member == true) : ?><a href="#" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#group_settings"><i class="fas fa-cog"></i></a><?php endif; ?></h1>
                 <p>Number of members : <?php echo $number_of_members; ?></p>
             </div>
         </div>
@@ -154,7 +166,15 @@ ob_end_flush();
         <div class="container">
             <div class="row d-flex justify-content-center mt-5">
                 <div class="col-md-6 text-center">
-                    <a href="#" class="btn btn-success"> Add new post here <i class="fas fa-plus"></i></a>
+                    <?php if ($whether_group_member) : ?>
+                        <a href="add-post.php?group=<?php echo $this_group_info['id']; ?>" class="btn btn-success"> Add new post here <i class="fas fa-plus"></i></a>
+                    <?php else : ?>
+                        <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="POST">
+                            <input type="hidden" name="join">
+                            <button type="submit" class="btn btn-success">Join the group</button>
+                        </form>
+
+                    <?php endif; ?>
                 </div>
 
             </div>
@@ -162,75 +182,39 @@ ob_end_flush();
         <!-- END NEW POST -->
         <!-- CENTER -->
 
-        <div class="container">
-
-            <div class="row d-flex justify-content-center mt-5">
-                <div class="col-md-1">
-                    <div class="ratio img-responsive img-circle" style="background-image: url('img/test-person.jpg');">
-
-                    </div>
-
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">I bought new car!</h5>
-                            <p class="card-text">THIS IS MY NEW CAR!<img src="img/car.jpg" class="img-fluid" alt="..."></p>
-                            <a href="#" class="btn btn-secondary">View</a>
-
-                        </div>
-                        <div class="card-footer text-muted">
-                            0 <i class="fas fa-heart"></i> 0 <i class="fas fa-comments"></i> 2 days ago
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            <div class="row d-flex justify-content-center mt-5">
-                <div class="col-md-1">
-                    <div class="ratio img-responsive img-circle" style="background-image: url('img/test-person.jpg');">
-
-                    </div>
-
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">My new profile photo</h5>
-                            <p class="card-text"><img src="img/test-person.jpg" class="img-fluid" alt="..."></p>
-                            <a href="#" class="btn btn-secondary">View</a>
-
-                        </div>
-                        <div class="card-footer text-muted">
-                            0 <i class="fas fa-heart"></i> 0 <i class="fas fa-comments"></i> 2 days ago
-                        </div>
-                    </div>
-
-                </div>
-            </div>
+        <div class="container" id="group_posts">
 
 
         </div>
-        <!-- SHOW MORE -->
-        <div class="container">
-            <div class="row d-flex justify-content-center mt-5">
-                <div class="col-md-6 text-center">
 
-                    <a href="#" class="btn btn-secondary"> Show more <i class="fas fa-arrow-down"></i></a>
-
-                </div>
-            </div>
-        </div>
-        <!-- END SHOW MORE -->
         <!-- CENTER -->
-        <!-- Option 1: Bootstrap Bundle with Popper -->
+        <script>
+            var perPage = 10;
+            ShowMore(perPage);
+
+            $(document).on("click", "#show_more", function() {
+
+                perPage += 5;
+                ShowMore(perPage);
+
+            });
+
+            function ShowMore(perPage) {
+
+                $.get("getDate.php", {
+                        direction: "group_posts",
+                        group: <?php echo $group_id; ?>,
+                        perPage: perPage
+                    })
+                    .done(function(data) {
+                        $("#group_posts").html(data);
+
+                    });
+
+            }
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
 
-        <!-- Option 2: Separate Popper and Bootstrap JS -->
-        <!--
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.6.0/dist/umd/popper.min.js" integrity="sha384-KsvD1yqQ1/1+IA7gi3P0tyJcT3vR+NdBTt13hSJ2lnve8agRGXTTyNaBYmCR/Nwi" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.min.js" integrity="sha384-nsg8ua9HAw1y0W1btsyWgBklPnCUAFLuTMS2G72MMONqmOymq585AcH49TLBQObG" crossorigin="anonymous"></script>
-    -->
 </body>
 
 </html>

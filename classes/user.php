@@ -8,23 +8,27 @@ class user extends db
 {
 
     private $username;
+    private $firstname;
+    private $lastname;
     private $email;
     private $is_logged = false;
     private $msg = array();
     private $error = array();
-
+    private $user_id;
+    private $search;
     public function __construct()
     {
-        session_start();
+        if (!isset($_SESSION)) {
+            session_start();
+        }
         parent::__construct();
-
+        $this->search = '';
         $this->update_messages();
 
         // Checks if the user is logged in
-        if (!empty($_SESSION['username']) && $_SESSION['is_logged']) {
+        if (!empty($_SESSION['is_logged']) && $_SESSION['is_logged']) {
 
             $this->is_logged = true;
-            $this->username = $_SESSION['username'];
         }
         return $this;
     }
@@ -177,7 +181,7 @@ class user extends db
                 if (
                     $this->check_unique_nickname() == 0
                     && $this->check_unique_email() == 0
-                    && $this->verify_email() == true
+                    && $this->_verify_email() == true
                     && $this->verify_nick_alphanumeric() == true
                     && $this->verify_username_lenght() == true
                     && $this->verify_password_lenght() == true
@@ -212,7 +216,7 @@ class user extends db
                     if ($this->check_unique_email() != 0) {
                         $this->error[] = 'E-mail address is already taken!';
                     }
-                    if ($this->verify_email() != true) {
+                    if ($this->_verify_email() != true) {
                         $this->error[] = 'E-mail address is incorrect!';
                     }
                     if ($this->verify_password_lenght() != true) {
@@ -276,7 +280,7 @@ class user extends db
         return $alphanumeric_nickname;
     }
     // Validation of the e-mail address
-    private function verify_email()
+    private function _verify_email()
     {
         $valid_email = false;
 
@@ -315,4 +319,251 @@ class user extends db
 
         return $account_count;
     }
+
+
+
+
+    /*
+Show user information
+
+*/
+    private function _user_exist()
+    {
+
+        $user_count = parent::query('SELECT * FROM users WHERE id = ? ', "$this->user_id")->row_count();
+        if ($user_count > 0) {
+            $user_exist = true;
+        } else {
+            $user_exist = false;
+        }
+
+        return $user_exist;
+    }
+
+
+    private function fetch_user_info()
+    {
+        if ($this->user_id != Null && $this->_user_exist()) {
+
+
+            $user_info = parent::query('SELECT * FROM users WHERE id = ? ', "$this->user_id")->fetchArray();
+
+            return $user_info;
+        } else {
+            header('Location: index.php');
+            exit();
+        }
+    }
+
+    public function user_info()
+    {
+        $user_info = $this->fetch_user_info();
+        return $user_info;
+    }
+
+    public function user_id($user_id = null)
+    {
+        if ($user_id != null) {
+            $this->user_id =  parent::real_escape_string($user_id);
+            $user_exists = $this->_user_exist();
+
+            if (!is_numeric($this->user_id)) {
+                header('Location: index.php');
+                exit();
+            }
+            if ($user_exists == false) {
+
+                header('Location: index.php');
+                exit();
+            }
+        }
+    }
+
+    private function check_account_owner()
+    {
+
+        $owner_id = parent::query('SELECT id FROM users WHERE id = ? ', "$this->user_id")->fetchArray();
+        $logged_account_id =  parent::real_escape_string($_SESSION['user_id']);
+        if ($owner_id['id'] == $logged_account_id) {
+            $owner_profile = true;
+        } else {
+            $owner_profile = false;
+        }
+
+        return $owner_profile;
+    }
+
+    public function account_owner()
+    {
+
+        $owner_profile = $this->check_account_owner();
+        return $owner_profile;
+    }
+
+
+    private function fetch_friends_list()
+    {
+        $friends_list = parent::query('SELECT first_name, last_name, users.id FROM users INNER JOIN friend_ship ON users.id = friend_ship.friend_id WHERE user_id = ? AND users.first_name LIKE ? AND users.last_name LIKE ? AND user_accepted = ? AND friend_accepted = ?', "$this->user_id", "%$this->search%", "%$this->search%", 1, 1)->fetchAll();
+        return $friends_list;
+    }
+    public function friends($search = '')
+    {
+        $this->search = parent::real_escape_string($search);
+
+        $friends_list = $this->fetch_friends_list();
+        return $friends_list;
+    }
+
+
+    private function fetch_user_friendship()
+    {
+        $logged_account_id =  parent::real_escape_string($_SESSION['user_id']);
+        $user_friend = parent::query('SELECT * FROM friend_ship WHERE friend_id = ? AND user_id = ? AND user_accepted = ? AND friend_accepted = ?', "$this->user_id", "$logged_account_id", 1, 1)->row_count();
+        if ($user_friend > 0) {
+            $user_friend_exists = true;
+        } else {
+
+            $user_friend_exists = false;
+        }
+
+        return $user_friend_exists;
+    }
+
+    public function user_friendship()
+    {
+        $user_friend_exists = $this->fetch_user_friendship();
+        return $user_friend_exists;
+    }
+
+
+    private function _send_intivation()
+    {
+        $logged_account_id =  parent::real_escape_string($_SESSION['user_id']);
+        $user_friend = parent::query('SELECT * FROM friend_ship WHERE friend_id = ? AND user_id = ?', "$this->user_id", "$logged_account_id")->row_count();
+        if ($user_friend > 0) {
+            $user_friend_exists = true;
+        } else {
+
+            $user_friend_exists = false;
+        }
+        if ($user_friend_exists == false) {
+
+            db::query(
+                'INSERT INTO friend_ship (`id`, `user_id`, `friend_id`, `user_accepted`, `friend_accepted`, `readed`,`accepted`) VALUES (?,?,?,?,?,?,?) , (?,?,?,?,?,?,?)',
+                NULL,
+                "$logged_account_id",
+                "$this->user_id",
+                1,
+                0,
+                1,
+                0,
+                NULL,
+                "$this->user_id",
+                "$logged_account_id",
+                0,
+                1,
+                0,
+                0
+            );
+        }
+    }
+
+    public function send_invitation()
+    {
+
+        $this->_send_intivation();
+    }
+
+    private function _invitation_sent()
+    {
+        $logged_account_id =  parent::real_escape_string($_SESSION['user_id']);
+        $user_friend_exists = $this->fetch_user_friendship();
+        if ($user_friend_exists == false) {
+            $invitation_sent = parent::query('SELECT * FROM friend_ship WHERE friend_id = ? AND user_id = ? AND friend_accepted = ? AND user_accepted = ?', "$this->user_id", "$logged_account_id", 0, 1)->row_count();
+            if ($invitation_sent > 0) {
+                $invitation_sent_exists = true;
+            } else {
+
+                $invitation_sent_exists = false;
+            }
+            return $invitation_sent_exists;
+        }
+    }
+
+    public function invitation_sent()
+    {
+
+        $invitation_sent_exists = $this->_invitation_sent();
+        return $invitation_sent_exists;
+    }
+
+
+    private function _invitation_get()
+    {
+        $logged_account_id =  parent::real_escape_string($_SESSION['user_id']);
+        $user_friend_exists = $this->fetch_user_friendship();
+        if ($user_friend_exists == false) {
+            $invitation_get = parent::query('SELECT * FROM friend_ship WHERE friend_id = ? AND user_id = ? AND friend_accepted = ? AND user_accepted = ?', "$this->user_id", "$logged_account_id", 1, 0)->row_count();
+            if ($invitation_get > 0) {
+                $invitation_get_exists = true;
+            } else {
+
+                $invitation_get_exists = false;
+            }
+            return $invitation_get_exists;
+        }
+    }
+
+    public function invitation_get()
+    {
+
+        $invitation_get_exists = $this->_invitation_get();
+        return $invitation_get_exists;
+    }
+
+
+    private function _invitation_accept()
+    {
+        $logged_account_id =  parent::real_escape_string($_SESSION['user_id']);
+        db::query(
+            'UPDATE friend_ship SET `friend_accepted` = ? , `user_accepted` = ? WHERE user_id = ? AND friend_id = ? OR user_id = ? AND friend_id = ?',
+             1,
+             1,
+            "$this->user_id",
+            "$logged_account_id",
+            "$logged_account_id",
+            "$this->user_id"
+        );
+
+    }
+
+    public function invitation_accept()
+    {
+
+        $invitation_get = $this->_invitation_get();
+        if ($invitation_get == true) {
+            $this->_invitation_accept();
+        }
+    }
+
+    private function _remove_friendship()
+    {
+
+        $logged_account_id =  parent::real_escape_string($_SESSION['user_id']);
+
+        db::query(
+            'DELETE FROM friend_ship WHERE friend_id = ? AND user_id = ? OR friend_id = ? AND user_id = ? ',
+            "$this->user_id",
+            "$logged_account_id",
+            "$logged_account_id",
+            "$this->user_id"
+        );
+    }
+
+    public function remove_friendship()
+    {
+
+        $this->_remove_friendship();
+    }
+ 
 }
